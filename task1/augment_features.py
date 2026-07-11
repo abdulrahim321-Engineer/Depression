@@ -41,7 +41,10 @@ def augment_array(X, subs, noise_fraction=NOISE_FRACTION, copies=COPIES):
     for c in range(1, copies + 1):
         noise = np.random.normal(0, noise_fraction * per_feat_std, size=X.shape)
         aug_X.append(X + noise)
-        aug_subs.append(subs + 1000 * c)   # new unique subject IDs
+        if np.issubdtype(subs.dtype, np.number):
+            aug_subs.append(subs + 1000 * c)   # new unique numeric subject IDs
+        else:
+            aug_subs.append(np.array([f"{s}_aug{c}" for s in subs])) # new unique string subject IDs
 
     return np.concatenate(aug_X, axis=0), np.concatenate(aug_subs, axis=0)
 
