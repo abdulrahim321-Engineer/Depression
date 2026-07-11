@@ -74,7 +74,7 @@ print("=" * 60)
 from task1.augment_features import augment_file
 
 TASK1 = os.path.join(WORKING, "task1")
-DATASET = "/kaggle/input/eeg-depression-features"
+DATASET = "/kaggle/input/datasets/abdulrahim34ew/eeg-depression-features"
 if not os.path.exists(DATASET):
     DATASET = TASK1  # Fallback to local task1 folder if not on Kaggle
 
