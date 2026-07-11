@@ -124,7 +124,7 @@ def run_tuning_2view(feat_path, out_prefix="tuned_2view"):
         print("[INFO] CPU GEDLCE fallback")
 
     RANDOM_STATE = 42; np.random.seed(RANDOM_STATE)
-    N_FOLDS = 3; K_TF = 128; GEDLCE_ITER = 30; BASELINE_ACC = 0.6580
+    N_FOLDS = 4; K_TF = 128; GEDLCE_ITER = 15; BASELINE_ACC = 0.6580
 
     feat   = np.load(feat_path)
     tf_all = np.nan_to_num(feat["tf"].astype(np.float64)[:, :768], nan=0.0, posinf=0.0, neginf=0.0)
@@ -193,10 +193,10 @@ def run_tuning_2view(feat_path, out_prefix="tuned_2view"):
             accs.append(accuracy_score(sy, sp))
         return float(np.mean(accs))
 
-    best = {"p_dim": 10, "k_neighbors": 10, "pca_dims": 20, "lam": (1.0, 0.1, 0.1, 0.1)}
+    best = {"p_dim": 20, "k_neighbors": 10, "pca_dims": 20, "lam": (1.0, 0.1, 0.1, 0.1)}
 
     for param, space in [
-        ("p_dim",       [5, 10, 15, 20, 25, 30]),
+        # ("p_dim",       [5, 10, 15, 20, 25, 30]),
         ("k_neighbors", [5, 10, 15, 20]),
         ("pca_dims",    [10, 15, 20, 25]),
         ("lam",         [(1.0,0.1,0.1,0.1),(1.0,0.5,0.5,0.1),(1.0,0.1,0.5,0.5),(2.0,0.1,0.1,0.1)]),
@@ -368,7 +368,7 @@ def run_tuning_nview(feat_path, spatial_keys):
         from gedlce import GEDLCE
 
     RANDOM_STATE = 42; np.random.seed(RANDOM_STATE)
-    N_FOLDS = 3; K_TF = 128; GEDLCE_ITER = 30
+    N_FOLDS = 3; K_TF = 128; GEDLCE_ITER = 15
 
     feat   = np.load(feat_path, allow_pickle=True)
     tf_all = np.nan_to_num(feat["tf"].astype(np.float64)[:, :768], nan=0.0, posinf=0.0, neginf=0.0)
@@ -427,9 +427,9 @@ def run_tuning_nview(feat_path, spatial_keys):
             accs.append(accuracy_score(sy, sp))
         return float(np.mean(accs))
 
-    best = {"p_dim": 10, "k_neighbors": 10, "pca_dims": 20, "lam": (1.0, 0.1, 0.1, 0.1)}
+    best = {"p_dim": 20, "k_neighbors": 10, "pca_dims": 20, "lam": (1.0, 0.1, 0.1, 0.1)}
     for param, space in [
-        ("p_dim",       [5, 10, 15, 20, 25, 30]),
+        # ("p_dim",       [5, 10, 15, 20, 25, 30]),
         ("k_neighbors", [5, 10, 15, 20]),
         ("pca_dims",    [10, 15, 20, 25]),
         ("lam",         [(1.0,0.1,0.1,0.1),(1.0,0.5,0.5,0.1),(1.0,0.1,0.5,0.5),(2.0,0.1,0.1,0.1)]),
