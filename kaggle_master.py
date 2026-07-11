@@ -74,18 +74,25 @@ print("=" * 60)
 from task1.augment_features import augment_file
 
 TASK1 = os.path.join(WORKING, "task1")
+DATASET = "/kaggle/input/eeg-depression-features"
+if not os.path.exists(DATASET):
+    DATASET = TASK1  # Fallback to local task1 folder if not on Kaggle
+
 OUT   = "/kaggle/working" if os.path.exists("/kaggle/working") else TASK1
 
 v2_aug = os.path.join(OUT, "extracted_features_v2_aug.npz")
 v3_aug = os.path.join(OUT, "extracted_features_v3_aug.npz")
 
+v2 = os.path.join(DATASET, "extracted_features_v2.npz")
+v3 = os.path.join(DATASET, "extracted_features_v3.npz")
+
 if not os.path.exists(v2_aug):
-    augment_file(os.path.join(TASK1, "extracted_features_v2.npz"), v2_aug, copies=1)
+    augment_file(v2, v2_aug, copies=1)
 else:
     print(f"[SKIP] {v2_aug} already exists.")
 
 if not os.path.exists(v3_aug):
-    augment_file(os.path.join(TASK1, "extracted_features_v3.npz"), v3_aug, copies=1)
+    augment_file(v3, v3_aug, copies=1)
 else:
     print(f"[SKIP] {v3_aug} already exists.")
 
