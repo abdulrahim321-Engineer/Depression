@@ -41,22 +41,20 @@ print("Setup complete!")
 # ═══════════════════════════════════════════════════════════════════════════════
 #  CELL 1 — Copy dataset files from Kaggle input to working directory
 # ═══════════════════════════════════════════════════════════════════════════════
-"""
 import shutil, os
 
 KAGGLE_INPUT = "/kaggle/input/eeg-depression-features"
 TASK1_DIR    = "/kaggle/working/Depression/task1"
-os.makedirs(TASK1_DIR, exist_ok=True)
-
-for f in ["extracted_features_v2.npz", "extracted_features_v3.npz"]:
-    src = os.path.join(KAGGLE_INPUT, f)
-    dst = os.path.join(TASK1_DIR, f)
-    if not os.path.exists(dst):
-        shutil.copy(src, dst)
-        print(f"Copied {f}")
-    else:
-        print(f"Already exists: {f}")
-"""
+if os.path.exists(KAGGLE_INPUT):
+    os.makedirs(TASK1_DIR, exist_ok=True)
+    for f in ["extracted_features_v2.npz", "extracted_features_v3.npz"]:
+        src = os.path.join(KAGGLE_INPUT, f)
+        dst = os.path.join(TASK1_DIR, f)
+        if not os.path.exists(dst):
+            shutil.copy(src, dst)
+            print(f"Copied {f}")
+        else:
+            print(f"Already exists: {f}")
 
 # ═══════════════════════════════════════════════════════════════════════════════
 #  CELL 2 — Step 1: Data Augmentation (2x)
