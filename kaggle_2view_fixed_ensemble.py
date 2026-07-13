@@ -10,7 +10,7 @@ from sklearn.svm import SVC
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import RidgeClassifier, LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, precision_score, recall_score, confusion_matrix, roc_auc_score
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
@@ -90,6 +90,11 @@ slm = {s: labs[subs == s][0] for s in uniq}
 sl = np.array([slm[s] for s in uniq])
 cv = StratifiedGroupKFold(n_splits=N_FOLDS, shuffle=True, random_state=RANDOM_STATE)
 
+# Collect KNN predictions across all folds for detailed metrics
+knn_y_true_all = []
+knn_y_pred_all = []
+knn_y_prob_all = []
+
 print("\n" + "=" * 60)
 # Step 1 is handled, this is Step 2/3 but fixed
 print("  Running Fixed 2-View (TF+MI) with Ensemble & KNN")
@@ -166,7 +171,7 @@ for fold, (tri, tei) in enumerate(cv.split(uniq, sl, groups=uniq)):
 
         # Subject Majority Vote
         _, sp_tr, _ = _mv(tr_s, preds_tr, probs_tr)
-        _, sp_te, _ = _mv(te_s, preds_te, probs_te)
+        _, sp_te, sq_te = _mv(te_s, preds_te, probs_te)
         _, sy_tr = _gt(tr_s, y_tr)
         _, sy_te = _gt(te_s, y_te)
 
@@ -176,6 +181,11 @@ for fold, (tri, tei) in enumerate(cv.split(uniq, sl, groups=uniq)):
         hist_tr[cn].append(tr_a)
         hist_te[cn].append(te_a)
         print(f"  Fold{fold+1} [{cn:<12}] Train={tr_a:.4f} Test={te_a:.4f} Gap={tr_a-te_a:+.4f}")
+
+        if cn == "KNN":
+            knn_y_true_all.extend(sy_te)
+            knn_y_pred_all.extend(sp_te)
+            knn_y_prob_all.extend(sq_te)
 
     # Evaluate the Soft Voting Ensemble (average segment-level probabilities)
     avg_probs_tr = np.mean(seg_probs_tr, axis=0)
@@ -194,6 +204,26 @@ for fold, (tri, tei) in enumerate(cv.split(uniq, sl, groups=uniq)):
     hist_tr["Ensemble"].append(ens_tr_a)
     hist_te["Ensemble"].append(ens_te_a)
     print(f"  Fold{fold+1} [Ensemble    ] Train={ens_tr_a:.4f} Test={ens_te_a:.4f} Gap={ens_tr_a-ens_te_a:+.4f}")
+
+# Compute and print KNN detailed metrics
+knn_y_true_all = np.array(knn_y_true_all)
+knn_y_pred_all = np.array(knn_y_pred_all)
+knn_y_prob_all = np.array(knn_y_prob_all)
+
+knn_acc = accuracy_score(knn_y_true_all, knn_y_pred_all)
+knn_prec = precision_score(knn_y_true_all, knn_y_pred_all)
+knn_sens = recall_score(knn_y_true_all, knn_y_pred_all)  # Sensitivity is Recall
+tn, fp, fn, tp = confusion_matrix(knn_y_true_all, knn_y_pred_all).ravel()
+knn_spec = tn / (tn + fp)
+knn_auc = roc_auc_score(knn_y_true_all, knn_y_prob_all)
+
+print(f"\n{'='*70}\n  KNN DETAILED PERFORMANCE METRICS (Subject-Level)\n{'='*70}")
+print(f"  Accuracy:    {knn_acc:.4f}")
+print(f"  Precision:   {knn_prec:.4f}")
+print(f"  Sensitivity: {knn_sens:.4f} (Recall)")
+print(f"  Specificity: {knn_spec:.4f}")
+print(f"  AUC Score:   {knn_auc:.4f}")
+print(f"  Confusion Matrix: TN={tn}, FP={fp}, FN={fn}, TP={tp}")
 
 # Final Summary Table
 print(f"\n{'='*70}\n  SUMMARY: Fixed 2-View Ensemble Experiment\n{'='*70}")
