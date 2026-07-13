@@ -10,7 +10,7 @@ from sklearn.svm import SVC
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import RidgeClassifier, LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.metrics import accuracy_score, precision_score, recall_score, confusion_matrix, roc_auc_score
+from sklearn.metrics import accuracy_score, precision_score, recall_score, confusion_matrix, roc_auc_score, roc_curve, auc, ConfusionMatrixDisplay
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
@@ -90,10 +90,12 @@ slm = {s: labs[subs == s][0] for s in uniq}
 sl = np.array([slm[s] for s in uniq])
 cv = StratifiedGroupKFold(n_splits=N_FOLDS, shuffle=True, random_state=RANDOM_STATE)
 
-# Collect KNN predictions across all folds for detailed metrics
+# Collect KNN and Ensemble predictions across all folds for detailed metrics
 knn_y_true_all = []
 knn_y_pred_all = []
 knn_y_prob_all = []
+ens_y_true_all = []
+ens_y_prob_all = []
 
 print("\n" + "=" * 60)
 # Step 1 is handled, this is Step 2/3 but fixed
@@ -195,7 +197,7 @@ for fold, (tri, tei) in enumerate(cv.split(uniq, sl, groups=uniq)):
     ens_preds_te = (avg_probs_te >= 0.5).astype(int)
 
     _, sp_ens_tr, _ = _mv(tr_s, ens_preds_tr, avg_probs_tr)
-    _, sp_ens_te, _ = _mv(te_s, ens_preds_te, avg_probs_te)
+    _, sp_ens_te, sq_ens_te = _mv(te_s, ens_preds_te, avg_probs_te)
     _, sy_tr = _gt(tr_s, y_tr)
     _, sy_te = _gt(te_s, y_te)
 
@@ -204,6 +206,9 @@ for fold, (tri, tei) in enumerate(cv.split(uniq, sl, groups=uniq)):
     hist_tr["Ensemble"].append(ens_tr_a)
     hist_te["Ensemble"].append(ens_te_a)
     print(f"  Fold{fold+1} [Ensemble    ] Train={ens_tr_a:.4f} Test={ens_te_a:.4f} Gap={ens_tr_a-ens_te_a:+.4f}")
+
+    ens_y_true_all.extend(sy_te)
+    ens_y_prob_all.extend(sq_ens_te)
 
 # Compute and print KNN detailed metrics
 knn_y_true_all = np.array(knn_y_true_all)
@@ -250,4 +255,38 @@ plt.tight_layout()
 plot_file = os.path.join(OUT_DIR, "Kaggle_2view_Fixed_Ensemble.png")
 plt.savefig(plot_file, dpi=150)
 print(f"\n[INFO] Plot saved -> {plot_file}")
+
+# Save Confusion Matrix Heatmap for KNN (the best model)
+fig, ax = plt.subplots(figsize=(6, 5))
+cm = confusion_matrix(knn_y_true_all, knn_y_pred_all)
+disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=["Healthy", "Depressed"])
+disp.plot(ax=ax, cmap="Blues", values_format="d")
+ax.set_title("KNN Confusion Matrix (Subject-Level)")
+cm_plot_file = os.path.join(OUT_DIR, "Kaggle_2view_KNN_Confusion_Matrix.png")
+plt.tight_layout()
+plt.savefig(cm_plot_file, dpi=150)
+print(f"[INFO] Confusion Matrix Plot saved -> {cm_plot_file}")
+
+# Save ROC Curves for KNN and Ensemble
+fig, ax = plt.subplots(figsize=(7, 6))
+
+fpr_knn, tpr_knn, _ = roc_curve(knn_y_true_all, knn_y_prob_all)
+roc_auc_knn = auc(fpr_knn, tpr_knn)
+ax.plot(fpr_knn, tpr_knn, color="darkorange", lw=2, label=f"KNN ROC (AUC = {roc_auc_knn:.4f})")
+
+fpr_ens, tpr_ens, _ = roc_curve(np.array(ens_y_true_all), np.array(ens_y_prob_all))
+roc_auc_ens = auc(fpr_ens, tpr_ens)
+ax.plot(fpr_ens, tpr_ens, color="navy", lw=2, label=f"Ensemble ROC (AUC = {roc_auc_ens:.4f})")
+
+ax.plot([0, 1], [0, 1], color="gray", lw=1, linestyle="--")
+ax.set_xlim([0.0, 1.0])
+ax.set_ylim([0.0, 1.05])
+ax.set_xlabel("False Positive Rate")
+ax.set_ylabel("True Positive Rate")
+ax.set_title("Receiver Operating Characteristic (ROC) Curves")
+ax.legend(loc="lower right")
+roc_plot_file = os.path.join(OUT_DIR, "Kaggle_2view_ROC_Curves.png")
+plt.tight_layout()
+plt.savefig(roc_plot_file, dpi=150)
+print(f"[INFO] ROC Curves Plot saved -> {roc_plot_file}")
 print("=" * 70)
