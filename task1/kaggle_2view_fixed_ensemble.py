@@ -16,8 +16,9 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 # Auto-detect paths
-WORKING = "/kaggle/working/Depression" if os.path.exists("/kaggle/working") else os.getcwd()
-sys.path.insert(0, os.path.join(WORKING, "task1"))
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+WORKING = os.path.dirname(SCRIPT_DIR)
+sys.path.insert(0, SCRIPT_DIR)
 sys.path.insert(0, WORKING)
 
 try:
@@ -41,7 +42,7 @@ N_FOLDS = 3
 K_TF = 128
 BASELINE_ACC = 0.6580
 
-OUT_DIR = "/kaggle/working" if os.path.exists("/kaggle/working") else os.path.join(WORKING, "task1")
+OUT_DIR = "/kaggle/working" if os.path.exists("/kaggle/working") else SCRIPT_DIR
 v2_aug = os.path.join(OUT_DIR, "extracted_features_v2_aug.npz")
 
 if not os.path.exists(v2_aug):

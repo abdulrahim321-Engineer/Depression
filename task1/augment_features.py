@@ -97,8 +97,9 @@ def main():
 
     def find_file(filename):
         """Search for a file in current dir, task1/, and Kaggle input."""
+        root_dir = os.path.dirname(base_dir)
         candidates = [
-            os.path.join(base_dir, "task1", filename),
+            os.path.join(root_dir, "extracted_datasets", filename),
             os.path.join(base_dir, filename),
             os.path.join(kaggle_input, filename),
         ]
