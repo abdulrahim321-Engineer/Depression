@@ -150,7 +150,7 @@ for fold, (tri, tei) in enumerate(cv.split(uniq, sl, groups=uniq)):
         except ImportError:
             rf = RandomForestClassifier(n_jobs=-1, max_depth=5, random_state=RANDOM_STATE)
             print(f"  [Boruta] Fitting CPU Boruta on {k_coarse} features...", end=" ", flush=True)
-        boruta_sel = BorutaPy(rf, n_estimators='auto', random_state=RANDOM_STATE, verbose=0, max_iter=50)
+        boruta_sel = BorutaPy(rf, n_estimators='auto', random_state=RANDOM_STATE, verbose=0, max_iter=30)
         # cuML requires float32/float64 inputs, cast explicitly to avoid warnings
         boruta_sel.fit(Xtf_tr_c.astype(np.float32), y_tr.astype(np.int32))
         
