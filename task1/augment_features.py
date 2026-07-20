@@ -96,17 +96,20 @@ def main():
     kaggle_input = "/kaggle/input/eeg-depression-features"
 
     def find_file(filename):
-        """Search for a file in current dir, task1/, and Kaggle input."""
         root_dir = os.path.dirname(base_dir)
         candidates = [
             os.path.join(root_dir, "extracted_datasets", filename),
             os.path.join(base_dir, filename),
             os.path.join(kaggle_input, filename),
         ]
+        import glob
+        if os.path.exists("/kaggle/input"):
+            candidates.extend(glob.glob(f"/kaggle/input/**/{filename}", recursive=True))
+            
         for c in candidates:
             if os.path.exists(c):
                 return c
-        raise FileNotFoundError(f"{filename} not found in any expected location.")
+        raise FileNotFoundError(f"{filename} not found in any expected location: {candidates}")
 
     def out_path(filename):
         """Output goes to task1/ locally, or /kaggle/working/ on Kaggle."""

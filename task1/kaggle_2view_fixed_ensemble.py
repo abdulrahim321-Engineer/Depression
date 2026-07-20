@@ -44,14 +44,18 @@ BASELINE_ACC = 0.6580
 
 OUT_DIR = "/kaggle/working" if os.path.exists("/kaggle/working") else SCRIPT_DIR
 v2_aug = os.path.join(OUT_DIR, "extracted_features_v2_aug.npz")
-
 if not os.path.exists(v2_aug):
     print(f"[INFO] Augmented file {v2_aug} not found. Running data augmentation first...")
+    import glob
     candidates = [
         os.path.join(WORKING, "extracted_datasets", "extracted_features_v2.npz"),
         os.path.join(SCRIPT_DIR, "extracted_features_v2.npz"),
-        "/kaggle/input/eeg-depression-features/extracted_features_v2.npz"
+        os.path.join(SCRIPT_DIR, "..", "extracted_datasets", "extracted_features_v2.npz"),
     ]
+    # Add any recursive matches under /kaggle/input/
+    if os.path.exists("/kaggle/input"):
+        candidates.extend(glob.glob("/kaggle/input/**/extracted_features_v2.npz", recursive=True))
+
     v2_src = None
     for c in candidates:
         if os.path.exists(c):
