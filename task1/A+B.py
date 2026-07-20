@@ -143,10 +143,16 @@ for fold, (tri, tei) in enumerate(cv.split(uniq, sl, groups=uniq)):
     # 2. Fine-grained filter using Boruta
     try:
         from boruta import BorutaPy
-        print(f"  [Boruta] Fitting Boruta on {k_coarse} ANOVA-filtered features...", end=" ", flush=True)
-        rf = RandomForestClassifier(n_jobs=-1, max_depth=5, random_state=RANDOM_STATE)
+        try:
+            from cuml.ensemble import RandomForestClassifier as GPUForest
+            rf = GPUForest(n_estimators=100, max_depth=5, random_state=RANDOM_STATE)
+            print(f"  [Boruta] Fitting GPU-accelerated Boruta (RAPIDS cuML) on {k_coarse} features...", end=" ", flush=True)
+        except ImportError:
+            rf = RandomForestClassifier(n_jobs=-1, max_depth=5, random_state=RANDOM_STATE)
+            print(f"  [Boruta] Fitting CPU Boruta on {k_coarse} features...", end=" ", flush=True)
         boruta_sel = BorutaPy(rf, n_estimators='auto', random_state=RANDOM_STATE, verbose=0, max_iter=50)
-        boruta_sel.fit(Xtf_tr_c, y_tr)
+        # cuML requires float32/float64 inputs, cast explicitly to avoid warnings
+        boruta_sel.fit(Xtf_tr_c.astype(np.float32), y_tr.astype(np.int32))
         
         # Get selected features (Confirmed)
         selected_mask = boruta_sel.support_
