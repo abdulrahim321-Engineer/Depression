@@ -46,8 +46,25 @@ OUT_DIR = "/kaggle/working" if os.path.exists("/kaggle/working") else SCRIPT_DIR
 v2_aug = os.path.join(OUT_DIR, "extracted_features_v2_aug.npz")
 
 if not os.path.exists(v2_aug):
-    print(f"[ERROR] Augmented file {v2_aug} not found! Please run Step 1 of the master script first.")
-    sys.exit(1)
+    print(f"[INFO] Augmented file {v2_aug} not found. Running data augmentation first...")
+    candidates = [
+        os.path.join(WORKING, "extracted_datasets", "extracted_features_v2.npz"),
+        os.path.join(SCRIPT_DIR, "extracted_features_v2.npz"),
+        "/kaggle/input/eeg-depression-features/extracted_features_v2.npz"
+    ]
+    v2_src = None
+    for c in candidates:
+        if os.path.exists(c):
+            v2_src = c
+            break
+    if v2_src is None:
+        print(f"[ERROR] Original dataset 'extracted_features_v2.npz' not found in candidates: {candidates}")
+        sys.exit(1)
+    try:
+        from augment_features import augment_file
+    except ImportError:
+        from task1.augment_features import augment_file
+    augment_file(v2_src, v2_aug, copies=1)
 
 feat = np.load(v2_aug)
 tf_all = np.nan_to_num(feat["tf"].astype(np.float64)[:, :768], nan=0.0, posinf=0.0, neginf=0.0)
