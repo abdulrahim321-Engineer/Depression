@@ -9,9 +9,10 @@ __pycache__/
 *.npz
 *.mat
 
-# Ignore output images and PDFs
+# Ignore output images and PDFs (except flowcharts)
 *.png
 *.pdf
+!Flowcharts/*.png
 
 # Python cache files
 *.pyc
