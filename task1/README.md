@@ -62,35 +62,41 @@ We evaluate 5 distinct classifiers on the fused feature space, along with a **So
 
 ## 4. Performance & Clinical Results
 
-### A. Classification Summary Table
+### A. Classification Summary Table (Weighted Ensemble Pipeline)
 
-| Classifier Model | Train Accuracy | Test Accuracy | Generalization Gap | Improvement vs. Baseline (65.80%) |
-| :--- | :---: | :---: | :---: | :---: |
-| **KNN (Winner)** | **100.00%** | **95.24%** | **4.76%** | **+29.44% [+]** |
-| **Ensemble** | 99.52% | 93.36% | 6.16% | +27.56% [+] |
-| **SVC (C=2)** | 98.11% | 92.43% | 5.67% | +26.63% [+] |
-| **Ridge Classifier** | 89.14% | 82.04% | 7.10% | +16.24% [+] |
-| **Logistic Regression** | 89.15% | 80.16% | 8.99% | +14.36% [+] |
-| **Random Forest** | 91.51% | 80.16% | 11.35% | +14.36% [+] |
+| Classifier Model | Train Accuracy | Test Accuracy | Generalization Gap | Improvement vs. Baseline (65.80%) | Status |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| **KNN** | 100.00% | 97.14% | 2.86% | +31.34% | Best Standalone |
+| **Ensemble (Weighted)** | **100.00%** | **96.19%** | **3.81%** | **+30.39%** | **Best Stable Version 🌟** |
+| **PyTorchMLP** | 100.00% | 94.29% | 5.71% | +28.49% | Stable Neural Network |
+| **SVC (C=2)** | 99.53% | 93.33% | 6.20% | +27.53% | Solid Baseline |
+| **Ridge Classifier** | 91.97% | 83.94% | 8.02% | +18.14% | Linear Baseline |
+| **Random Forest** | 93.88% | 81.98% | 11.90% | +16.18% | Tree Baseline |
+| **Logistic Regression** | 89.14% | 78.28% | 10.86% | +12.48% | Probabilistic Baseline |
 
-### B. KNN Detailed Performance Metrics
+### B. KNN Detailed Performance Metrics (ANOVA + Boruta)
 
-The K-Nearest Neighbors model achieved the highest classification accuracy. Below are its clinical diagnostic metrics (calculated at subject-level):
+The K-Nearest Neighbors model achieved the highest standalone accuracy. Below are its clinical diagnostic metrics (calculated at subject-level):
 
-*   **Diagnostic Accuracy:** **95.28%**
-*   **Precision (Positive Predictive Value):** **97.78%** (When the model diagnoses depression, it is correct 97.78% of the time)
-*   **Sensitivity (Recall):** **91.67%** (Successfully identified 91.67% of depressed subjects)
-*   **Specificity (True Negative Rate):** **98.28%** (Successfully identified 98.28% of healthy control subjects)
-*   **Area Under Curve (AUC):** **0.9971**
+*   **Diagnostic Accuracy:** **97.17%**
+*   **Precision (Positive Predictive Value):** **100.00%** (Perfect score. Zero false positives. When the model diagnoses depression, it is correct 100% of the time)
+*   **Sensitivity (Recall):** **93.75%** (Successfully identified 93.75% of depressed subjects)
+*   **Specificity (True Negative Rate):** **100.00%** (Perfect score. Successfully identified 100% of healthy control subjects)
+*   **Area Under Curve (AUC):** **0.9986**
 
 #### Confusion Matrix:
-*   **True Negatives (TN):** 57 (Healthy controls correctly identified)
-*   **True Positives (TP):** 44 (Depressed patients correctly identified)
-*   **False Negatives (FN):** 4 (Depressed patients missed by the model)
-*   **False Positives (FP):** 1 (Healthy control misclassified as depressed)
+*   **True Negatives (TN):** 58 (Healthy controls correctly identified)
+*   **True Positives (TP):** 45 (Depressed patients correctly identified)
+*   **False Negatives (FN):** 3 (Depressed patients missed by the model)
+*   **False Positives (FP):** 0 (Zero healthy controls misclassified as depressed)
 
 ---
 
 ## 5. Script Overview
 
-*   **`kaggle_2view_fixed_ensemble.py`**: The main execution script. It loads the augmented NPZ data, sets up the cross-validation, runs the GEDLCE manifold fusion with the optimal fixed parameters, trains the classifiers, evaluates the ensemble, and saves the accuracy visualization bar plot to `/kaggle/working/Kaggle_2view_Fixed_Ensemble.png`.
+*   **`A+B.py`**: Runs the hybrid ANOVA + Boruta feature selection, followed by GEDLCE projection, and prints classification summaries.
+*   **`A+B+MLP.py`**: Adds a regularized PyTorch Multi-Layer Perceptron (MLP) into the pipeline and uses standard soft voting (SVC+KNN+MLP).
+*   **`A+B+MLP_weighted.py`**: Implements the final weighted soft voting ensemble (70% KNN, 20% SVC, 10% MLP) for maximum stability.
+*   **`kaggle_2view_fixed_ensemble.py`**: The original fixed soft-voting ensemble script using ANOVA only.
+*   **`tune_2view.py`**: Parameter tuning script for finding the best GEDLCE configurations.
+
