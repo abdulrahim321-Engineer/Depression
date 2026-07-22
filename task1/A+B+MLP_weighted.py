@@ -178,6 +178,7 @@ knn_y_true_all = []
 knn_y_pred_all = []
 knn_y_prob_all = []
 ens_y_true_all = []
+ens_y_pred_all = []
 ens_y_prob_all = []
 
 print("\n" + "=" * 60)
@@ -321,6 +322,7 @@ for fold, (tri, tei) in enumerate(cv.split(uniq, sl, groups=uniq)):
     print(f"  Fold{fold+1} [Ensemble    ] Train={ens_tr_a:.4f} Test={ens_te_a:.4f} Gap={ens_tr_a-ens_te_a:+.4f}")
 
     ens_y_true_all.extend(sy_te)
+    ens_y_pred_all.extend(sp_ens_te)
     ens_y_prob_all.extend(sq_ens_te)
 
 # Compute and print KNN detailed metrics
@@ -331,8 +333,8 @@ knn_y_prob_all = np.array(knn_y_prob_all)
 knn_acc = accuracy_score(knn_y_true_all, knn_y_pred_all)
 knn_prec = precision_score(knn_y_true_all, knn_y_pred_all)
 knn_sens = recall_score(knn_y_true_all, knn_y_pred_all)
-tn, fp, fn, tp = confusion_matrix(knn_y_true_all, knn_y_pred_all).ravel()
-knn_spec = tn / (tn + fp)
+tn_k, fp_k, fn_k, tp_k = confusion_matrix(knn_y_true_all, knn_y_pred_all).ravel()
+knn_spec = tn_k / (tn_k + fp_k)
 knn_auc = roc_auc_score(knn_y_true_all, knn_y_prob_all)
 
 print(f"\n{'='*70}\n  KNN DETAILED PERFORMANCE METRICS (Subject-Level)\n{'='*70}")
@@ -341,7 +343,27 @@ print(f"  Precision:   {knn_prec:.4f}")
 print(f"  Sensitivity: {knn_sens:.4f} (Recall)")
 print(f"  Specificity: {knn_spec:.4f}")
 print(f"  AUC Score:   {knn_auc:.4f}")
-print(f"  Confusion Matrix: TN={tn}, FP={fp}, FN={fn}, TP={tp}")
+print(f"  Confusion Matrix: TN={tn_k}, FP={fp_k}, FN={fn_k}, TP={tp_k}")
+
+# Compute and print Weighted Ensemble detailed metrics
+ens_y_true_all = np.array(ens_y_true_all)
+ens_y_pred_all = np.array(ens_y_pred_all)
+ens_y_prob_all = np.array(ens_y_prob_all)
+
+ens_acc = accuracy_score(ens_y_true_all, ens_y_pred_all)
+ens_prec = precision_score(ens_y_true_all, ens_y_pred_all)
+ens_sens = recall_score(ens_y_true_all, ens_y_pred_all)
+tn_e, fp_e, fn_e, tp_e = confusion_matrix(ens_y_true_all, ens_y_pred_all).ravel()
+ens_spec = tn_e / (tn_e + fp_e)
+ens_auc = roc_auc_score(ens_y_true_all, ens_y_prob_all)
+
+print(f"\n{'='*70}\n  WEIGHTED ENSEMBLE DETAILED PERFORMANCE METRICS (Subject-Level)\n{'='*70}")
+print(f"  Accuracy:    {ens_acc:.4f}")
+print(f"  Precision:   {ens_prec:.4f}")
+print(f"  Sensitivity: {ens_sens:.4f} (Recall)")
+print(f"  Specificity: {ens_spec:.4f}")
+print(f"  AUC Score:   {ens_auc:.4f}")
+print(f"  Confusion Matrix: TN={tn_e}, FP={fp_e}, FN={fn_e}, TP={tp_e}")
 
 # Final Summary Table
 print(f"\n{'='*70}\n  SUMMARY: ANOVA + Boruta + MLP (PyTorch) Weighted Ensemble Experiment\n{'='*70}")
@@ -371,14 +393,25 @@ print(f"\n[INFO] Plot saved -> {plot_file}")
 
 # Save Confusion Matrix Heatmap for KNN
 fig, ax = plt.subplots(figsize=(6, 5))
-cm = confusion_matrix(knn_y_true_all, knn_y_pred_all)
-disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=["Healthy", "Depressed"])
-disp.plot(ax=ax, cmap="Blues", values_format="d")
+cm_k = confusion_matrix(knn_y_true_all, knn_y_pred_all)
+disp_k = ConfusionMatrixDisplay(confusion_matrix=cm_k, display_labels=["Healthy", "Depressed"])
+disp_k.plot(ax=ax, cmap="Blues", values_format="d")
 ax.set_title("KNN Confusion Matrix (Subject-Level)")
 cm_plot_file = os.path.join(OUT_DIR, "Kaggle_2view_Boruta_MLP_Weighted_KNN_Confusion_Matrix.png")
 plt.tight_layout()
 plt.savefig(cm_plot_file, dpi=150)
-print(f"[INFO] Confusion Matrix Plot saved -> {cm_plot_file}")
+print(f"[INFO] KNN Confusion Matrix Plot saved -> {cm_plot_file}")
+
+# Save Confusion Matrix Heatmap for Weighted Ensemble
+fig, ax = plt.subplots(figsize=(6, 5))
+cm_e = confusion_matrix(ens_y_true_all, ens_y_pred_all)
+disp_e = ConfusionMatrixDisplay(confusion_matrix=cm_e, display_labels=["Healthy", "Depressed"])
+disp_e.plot(ax=ax, cmap="Oranges", values_format="d")
+ax.set_title("Weighted Ensemble Confusion Matrix (Subject-Level)")
+ens_cm_plot_file = os.path.join(OUT_DIR, "Kaggle_2view_Boruta_MLP_Weighted_Ensemble_Confusion_Matrix.png")
+plt.tight_layout()
+plt.savefig(ens_cm_plot_file, dpi=150)
+print(f"[INFO] Ensemble Confusion Matrix Plot saved -> {ens_cm_plot_file}")
 
 # Save ROC Curves for KNN and Ensemble
 fig, ax = plt.subplots(figsize=(7, 6))
