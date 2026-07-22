@@ -274,8 +274,9 @@ for view in views_to_test:
                 knn_y_pred_all.extend(sp_te)
                 knn_y_prob_all.extend(sq_te)
 
-        # Ensemble
-        avg_probs_te = np.mean(seg_probs_te, axis=0)
+        # Ensemble (Weighted: 20% SVC, 70% KNN, 10% MLP)
+        weights = [0.20, 0.70, 0.10]
+        avg_probs_te = np.average(seg_probs_te, axis=0, weights=weights)
         ens_preds_te = (avg_probs_te >= 0.5).astype(int)
 
         _, sp_ens_te, sq_ens_te = _mv(te_s, ens_preds_te, avg_probs_te)
